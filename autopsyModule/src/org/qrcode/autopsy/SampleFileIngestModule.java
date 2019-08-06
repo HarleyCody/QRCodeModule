@@ -50,7 +50,8 @@ import org.sleuthkit.datamodel.BlackboardArtifact.ARTIFACT_TYPE;
 import org.sleuthkit.datamodel.BlackboardAttribute;
 import org.sleuthkit.datamodel.TskCoreException;
 import org.sleuthkit.datamodel.TskData;
-
+import org.qrcode.autopsy.FileAttributes;
+import org.qrcode.autopsy.Report;
 
 /**
  * Sample file ingest module that doesn't do much. Demonstrates per ingest job
@@ -64,6 +65,7 @@ class SampleFileIngestModule implements FileIngestModule {
     private final boolean skipKnownFiles;
     private IngestJobContext context = null;
     private static final IngestModuleReferenceCounter refCounter = new IngestModuleReferenceCounter();
+    private Report report;
 
     SampleFileIngestModule(SampleModuleIngestJobSettings settings) {
         this.skipKnownFiles = settings.skipKnownFiles();
@@ -73,6 +75,9 @@ class SampleFileIngestModule implements FileIngestModule {
     public  void startUp(IngestJobContext context) throws IngestModuleException {
         this.context = context;
         refCounter.incrementAndGet(context.getJobId());
+        
+        report=new Report();//生成表头
+        report.startup();
     }
 
     @Override
@@ -94,6 +99,7 @@ class SampleFileIngestModule implements FileIngestModule {
         try {
             QRCodeScanner scan = new QRCodeScanner(file.getLocalAbsPath());
             String decoded_text = scan.decode(file.getLocalAbsPath());
+            String version=scan.getVersion(file.getLocalAbsPath());
             // Make an attribute using the ID for the attribute attrType that 
             // was previously created.
             //BlackboardAttribute attr = new BlackboardAttribute(attrType, SampleIngestModuleFactory.getModuleName(), count);
@@ -113,8 +119,14 @@ class SampleFileIngestModule implements FileIngestModule {
             // Fire an event to notify any listeners for blackboard postings.
             ModuleDataEvent event = new ModuleDataEvent(SampleIngestModuleFactory.getModuleName(), ARTIFACT_TYPE.TSK_GEN_INFO);
             IngestServices.getInstance().fireModuleDataEvent(event);
+            
+            if(!decoded_text.equals("Not an Image")&&!decoded_text.equals("Not a QR Code")){
+                String QRType = report.parseQR(decoded_text);
+                report.addFileAttributes(file.getName(),file.getLocalPath(), decoded_text, file.getCtimeAsDate(), QRType, file.getNameExtension(), file.getMd5Hash(),version);//添加文件到list
+            }
 
             return IngestModule.ProcessResult.OK;
+            
 
         } catch (TskCoreException | NullPointerException ex) {
             IngestServices ingestServices = IngestServices.getInstance();
@@ -122,12 +134,16 @@ class SampleFileIngestModule implements FileIngestModule {
             logger.log(Level.SEVERE, "Error processing file (id = " + file.getId() + ")", ex);
             return IngestModule.ProcessResult.ERROR;
         }
+    
     }
+  
 
     @Override
-    public  void shutDown() {
+    public synchronized void shutDown() {
         // This method is thread-safe with per ingest job reference counted
         // management of shared data.
+        String path = "D:/"+ String.valueOf(context.getJobId());
+        report.generateReport(path);
         reportBlackboardPostCount(context.getJobId());
     }
 

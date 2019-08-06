@@ -21,6 +21,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import jp.sourceforge.qrcode.QRCodeDecoder;
 import jp.sourceforge.qrcode.data.QRCodeImage;
+import jp.sourceforge.qrcode.data.QRCodeSymbol;
+import jp.sourceforge.qrcode.reader.QRCodeImageReader;
 import jp.sourceforge.qrcode.exception.DecodingFailedException;
 
 public class QRCodeScanner {
@@ -79,7 +81,7 @@ public class QRCodeScanner {
         /* 读取二维码图像数据 */
         File imageFile = new File(qrcodePicfilePath);
         BufferedImage image;
-        String decodedData = "Not an image";
+        String decodedData = "Not an Image";
         ImageCheck check = new ImageCheck();
         if (!check.isImage(imageFile)) return decodedData;
         try {
@@ -100,10 +102,49 @@ public class QRCodeScanner {
             //System.out.println("读取二维码图片失败： " + e.getMessage());
             return decodedData;
         }
-        //String decodedData = new String(decoder.decode(new J2SEImageGucas(image)));
+		//这里打印出来的就是version和mask pattern 怎么返回就交给你了
+        //int[][] intImage = imageToIntArray(new J2SEImageGucas(image));
+        //imageReader = new QRCodeImageReader();
+	//QRCodeImageReader imageReader = new QRCodeImageReader();
+	//QRCodeSymbol qrCodeSymbol = imageReader.getQRCodeSymbol(intImage);
+        
         //System.out.println("解析内容如下："+decodedData);
+        //System.out.println("Version: " + qrCodeSymbol.getVersionReference());
+        //System.out.println("Mask pattern: " + qrCodeSymbol.getMaskPatternRefererAsString());
+		//
         return decodedData;
     }
+    
+        public String getVersion(String qrcodePicfilePath) {
+        //System.out.println("开始解析二维码！！");
+        /* 读取二维码图像数据 */
+        File imageFile = new File(qrcodePicfilePath);
+        BufferedImage image;
+        try {
+            image = ImageIO.read(imageFile);
+        } 
+        catch (IOException e) {
+            //System.out.println("读取二维码图片失败： " + e.getMessage());
+            return "no a QRCode";
+        }
+        int[][] intImage = imageToIntArray(new J2SEImageGucas(image));
+        QRCodeImageReader imageReader = new QRCodeImageReader();
+	//QRCodeImageReader imageReader = new QRCodeImageReader();
+	QRCodeSymbol qrCodeSymbol = imageReader.getQRCodeSymbol(intImage);
+        return qrCodeSymbol.getVersionReference();
+        }
+        
+	private static int[][] imageToIntArray(QRCodeImage image) {
+		int width = image.getWidth();
+		int height = image.getHeight();
+		int[][] intImage = new int[width][height];
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				intImage[x][y] = image.getPixel(x,y);
+			}
+		}
+		return intImage;
+	}
 }
 class J2SEImageGucas implements QRCodeImage {
     BufferedImage image;
