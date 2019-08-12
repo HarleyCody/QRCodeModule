@@ -326,6 +326,6 @@ public class SampleIngestModuleFactory implements IngestModuleFactory {
         if (!(settings instanceof SampleModuleIngestJobSettings)) {
             throw new IllegalArgumentException("Expected settings argument to be instanceof SampleModuleIngestJobSettings");
         }
-        return new SampleFileIngestModule((SampleModuleIngestJobSettings) settings);
+        return  SampleFileIngestModule.getInstance((SampleModuleIngestJobSettings) settings);
     }
 }

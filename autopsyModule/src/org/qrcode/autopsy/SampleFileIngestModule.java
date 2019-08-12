@@ -62,22 +62,39 @@ class SampleFileIngestModule implements FileIngestModule {
 
     private static final HashMap<Long, Long> artifactCountsForIngestJobs = new HashMap<>();
     private static BlackboardAttribute.ATTRIBUTE_TYPE attrType = BlackboardAttribute.ATTRIBUTE_TYPE.TSK_KEYWORD;
-    private final boolean skipKnownFiles;
+    private static  boolean skipKnownFiles;
     private IngestJobContext context = null;
     private static final IngestModuleReferenceCounter refCounter = new IngestModuleReferenceCounter();
-    private Report report;
-
-    SampleFileIngestModule(SampleModuleIngestJobSettings settings) {
-        this.skipKnownFiles = settings.skipKnownFiles();
+    private static Report report;
+    
+    static{
+        report = new Report();
     }
-
+    
+//    SampleFileIngestModule(SampleModuleIngestJobSettings settings) {
+//        this.skipKnownFiles = settings.skipKnownFiles();
+//    }
+    
+    private SampleFileIngestModule(){}
+    
+    private static class SFHolder{
+        private static final SampleFileIngestModule sf = new SampleFileIngestModule();
+    }
+    
+    public static SampleFileIngestModule getInstance(SampleModuleIngestJobSettings settings){
+        SampleFileIngestModule sf = SFHolder.sf;
+        sf.skipKnownFiles = settings.skipKnownFiles();
+        return sf;
+    }
+    
     @Override
-    public  void startUp(IngestJobContext context) throws IngestModuleException {
+    public void startUp(IngestJobContext context) throws IngestModuleException {
         this.context = context;
+//        this.context.ingestJob
         refCounter.incrementAndGet(context.getJobId());
-        
-        report=new Report();//生成表头
-        report.startup();
+        String path = "D:/"+ String.valueOf(context.getJobId());
+//        report=new Report();//生成表头
+        report.startup(path);
     }
 
     @Override
@@ -142,8 +159,7 @@ class SampleFileIngestModule implements FileIngestModule {
     public synchronized void shutDown() {
         // This method is thread-safe with per ingest job reference counted
         // management of shared data.
-        String path = "D:/"+ String.valueOf(context.getJobId());
-        report.generateReport(path);
+        report.generateReport();
         reportBlackboardPostCount(context.getJobId());
     }
 
