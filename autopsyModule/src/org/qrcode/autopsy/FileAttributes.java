@@ -5,17 +5,20 @@
  */
 package org.qrcode.autopsy;
 
+/**
+ * class for every records. store it to list and export list to .xls file
+ * @author Harley
+ */
 public class FileAttributes {
-	private String name; // 姓名
-	private String path; // 身份证
-        private String content; // 内容
+	private String name; 
+	private String path; 
+        private String content;
         private String timeStamp; 
         private String QRType;
         private String extention;
         private String hash;
         private String version;
-	//private String status; // 错误状态
-	//private String message; // 错误信息
+
  
 	FileAttributes(String name,String path, String con, String ts, String qt, String ex, String hash, String version){
 		this.name = name;
@@ -26,25 +29,17 @@ public class FileAttributes {
                 this.extention = ex;
                 this.hash = hash;
                 this.version=version;
-		//this.status = status;
-		//this.message = message;
+
 	}
 	
 	public String getName() {
 		return name;
 	}
  
-//	public void setName(String name) {
-//		this.name = name;
-//	}
  
 	public String getPath() {
 		return path;
 	}
- 
-//	public void setPath(String path) {
-//		this.path = path;
-//	}
         
         public String getContent(){
             return this.content;

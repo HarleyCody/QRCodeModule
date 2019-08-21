@@ -29,13 +29,10 @@
  */
 package org.qrcode.autopsy;
 
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import com.google.zxing.NotFoundException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
-import javax.imageio.ImageIO;
 import org.sleuthkit.autopsy.coreutils.Logger;
 import org.sleuthkit.autopsy.ingest.FileIngestModule;
 import org.sleuthkit.autopsy.ingest.IngestModule;
@@ -50,13 +47,15 @@ import org.sleuthkit.datamodel.BlackboardArtifact.ARTIFACT_TYPE;
 import org.sleuthkit.datamodel.BlackboardAttribute;
 import org.sleuthkit.datamodel.TskCoreException;
 import org.sleuthkit.datamodel.TskData;
-import org.qrcode.autopsy.FileAttributes;
-import org.qrcode.autopsy.Report;
 
 /**
  * Sample file ingest module that doesn't do much. Demonstrates per ingest job
  * module settings, use of a subset of the available ingest services and
  * thread-safe sharing of per ingest job data.
+ */
+/**
+ *
+ * @author Harley
  */
 class SampleFileIngestModule implements FileIngestModule {
 
@@ -67,33 +66,16 @@ class SampleFileIngestModule implements FileIngestModule {
     private static final IngestModuleReferenceCounter refCounter = new IngestModuleReferenceCounter();
     private static Report report;
     
-    static{
-        report = new Report();
-    }
-    
-//    SampleFileIngestModule(SampleModuleIngestJobSettings settings) {
-//        this.skipKnownFiles = settings.skipKnownFiles();
-//    }
-    
-    private SampleFileIngestModule(){}
-    
-    private static class SFHolder{
-        private static final SampleFileIngestModule sf = new SampleFileIngestModule();
-    }
-    
-    public static SampleFileIngestModule getInstance(SampleModuleIngestJobSettings settings){
-        SampleFileIngestModule sf = SFHolder.sf;
-        sf.skipKnownFiles = settings.skipKnownFiles();
-        return sf;
+    SampleFileIngestModule(SampleModuleIngestJobSettings settings) {
+        this.skipKnownFiles = settings.skipKnownFiles();
     }
     
     @Override
-    public void startUp(IngestJobContext context) throws IngestModuleException {
+    public synchronized void startUp(IngestJobContext context) throws IngestModuleException {
         this.context = context;
-//        this.context.ingestJob
         refCounter.incrementAndGet(context.getJobId());
         String path = "D:/"+ String.valueOf(context.getJobId());
-//        report=new Report();//生成表头
+        report = new Report();
         report.startup(path);
     }
 
@@ -115,13 +97,13 @@ class SampleFileIngestModule implements FileIngestModule {
         // Deliver the file to QR code module 
         try {
             QRCodeScanner scan = new QRCodeScanner(file.getLocalAbsPath());
-            String decoded_text = scan.decode(file.getLocalAbsPath());
-            String version=scan.getVersion(file.getLocalAbsPath());
+            List<String> decodedData = scan.decode();
+            //String version=scan.getVersion(file.getLocalAbsPath());
             // Make an attribute using the ID for the attribute attrType that 
             // was previously created.
             //BlackboardAttribute attr = new BlackboardAttribute(attrType, SampleIngestModuleFactory.getModuleName(), count);
             
-            BlackboardAttribute attr = new BlackboardAttribute(attrType, SampleIngestModuleFactory.getModuleName(), decoded_text);
+            BlackboardAttribute attr = new BlackboardAttribute(attrType, SampleIngestModuleFactory.getModuleName(), decodedData.get(0));
 
             // Add the to the general info artifact for the file. In a
             // real module, you would likely have more complex data types 
@@ -137,15 +119,14 @@ class SampleFileIngestModule implements FileIngestModule {
             ModuleDataEvent event = new ModuleDataEvent(SampleIngestModuleFactory.getModuleName(), ARTIFACT_TYPE.TSK_GEN_INFO);
             IngestServices.getInstance().fireModuleDataEvent(event);
             
-            if(!decoded_text.equals("Not an Image")&&!decoded_text.equals("Not a QR Code")){
-                String QRType = report.parseQR(decoded_text);
-                report.addFileAttributes(file.getName(),file.getLocalPath(), decoded_text, file.getCtimeAsDate(), QRType, file.getNameExtension(), file.getMd5Hash(),version);//添加文件到list
+            if(!decodedData.get(0).equals("Not an Image")&&!decodedData.get(0).equals("Not a QR Code")){
+                String QRType = report.parseQR(decodedData.get(0));
+                report.addFileAttributes(file.getName(),file.getLocalPath(), decodedData.get(0), decodedData.get(3), 
+                        QRType, file.getNameExtension(), decodedData.get(2),decodedData.get(1));//添加info到list
             }
 
             return IngestModule.ProcessResult.OK;
-            
-
-        } catch (TskCoreException | NullPointerException ex) {
+        } catch (TskCoreException | NullPointerException | NotFoundException ex) {
             IngestServices ingestServices = IngestServices.getInstance();
             Logger logger = ingestServices.getLogger(SampleIngestModuleFactory.getModuleName());
             logger.log(Level.SEVERE, "Error processing file (id = " + file.getId() + ")", ex);

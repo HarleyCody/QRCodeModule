@@ -9,8 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
- * @author Administrator
+ * use regular express to determine the type of QR code
+ * @author Harley
  */
 public class QRClassify {
     public boolean isHttpUrl(String text) {

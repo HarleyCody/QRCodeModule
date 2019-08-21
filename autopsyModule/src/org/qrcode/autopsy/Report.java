@@ -22,6 +22,10 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.sl.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.CellStyle;
 
+/**
+ *
+ * @author Harley
+ */
 public class Report {
     
         private ArrayList<FileAttributes> list;
@@ -37,48 +41,57 @@ public class Report {
                 if(!file.exists()){
                 
                     this.list = new ArrayList<FileAttributes>();
-		//第一步创建workbook
+                    
+                    //crreate workbook
                     wb = new HSSFWorkbook();
 		
-		//第二步创建sheet
+                    //create sheet
                     sheet = wb.createSheet("QR Code Information");
 		
-		//第三步创建行row:添加表头0行
+                    //create row: initialize row 0
                     HSSFRow row = sheet.createRow(0);
                     CellStyle  style = wb.createCellStyle();    
-		//style.setVerticalAlignment(VerticalAlignment.MIDDLE);  //居中
+                    
+                    //style.setVerticalAlignment(VerticalAlignment.MIDDLE); Style- mid
 		
 		
-		//第四步创建单元格
-                    HSSFCell cell = row.createCell(0);         //第一个单元格
-                    cell.setCellValue("File Name");                  //设定值
-                    cell.setCellStyle(style);                   //内容居中
-		
-                    cell = row.createCell(1);                   //第二个单元格   
+                    // create grid
+                    HSSFCell cell = row.createCell(0);
+                    cell.setCellValue("File Name");    
+                    cell.setCellStyle(style);                  
+                    
+                    // second grid
+                    cell = row.createCell(1); 
                     cell.setCellValue("Path");
                     cell.setCellStyle(style);
-                
-                    cell = row.createCell(2);                   //第二个单元格   
+                    
+                    // third grid
+                    cell = row.createCell(2);                   
                     cell.setCellValue("Content");
                     cell.setCellStyle(style);
-                
-                    cell = row.createCell(3);                   //第二个单元格   
+                    
+                    // forth grid
+                    cell = row.createCell(3);           
                     cell.setCellValue("Timestamp");
                     cell.setCellStyle(style);
-                
-                    cell = row.createCell(4);                   //第二个单元格   
+                    
+                    // fifth grid
+                    cell = row.createCell(4);                   
                     cell.setCellValue("Type of QRcode");
                     cell.setCellStyle(style);
-
-                    cell = row.createCell(5);                   //第二个单元格   
+                    
+                    // sixth grid
+                    cell = row.createCell(5);                     
                     cell.setCellValue("File Type");
                     cell.setCellStyle(style);
-
-                    cell = row.createCell(6);                   //第二个单元格   
+                    
+                    // seventh grid
+                    cell = row.createCell(6);                   
                     cell.setCellValue("Hash");
                     cell.setCellStyle(style);
-                
-                    cell = row.createCell(7);                   //第二个单元格   
+                    
+                    // eighth grid
+                    cell = row.createCell(7);                   
                     cell.setCellValue("Version");
                     cell.setCellStyle(style);
                 }
@@ -88,15 +101,13 @@ public class Report {
         }
 	
         public synchronized void  generateReport(){
-		//第五步插入数据
-		//List<FileAttributes> list = Report.getErrorCondition();
+		//Insert data
 		for (int i = 0; i < this.list.size(); ++i) {
 			FileAttributes file_attr = this.list.get(i);
-			//创建行
                         
 			HSSFRow row = sheet.createRow(sheet.getLastRowNum() + 1);
                         
-			//创建单元格并且添加数据
+			//create new grids and insert data
                         if(sheet.getLastRowNum() <= list.size()){
                             row.createCell(0).setCellValue(file_attr.getName());
                             row.createCell(1).setCellValue(file_attr.getPath());
@@ -109,7 +120,7 @@ public class Report {
                         }
 		}
 		
-		//第六步将生成excel文件保存到指定路径下
+		//save file to specific directory with specific name
 		try {
 			FileOutputStream fout = new FileOutputStream( this.path);
 			wb.write(fout);
@@ -119,23 +130,28 @@ public class Report {
 		}
 	}
 	
+        // update list of records
 	public void addFileAttributes(String name,String path, String con, String ts, String qt, String ex, String hash, String ver){
-		//ArrayList<ErrorCondition> list = new ArrayList<ErrorCondition>();
 		
 		FileAttributes f1 = new FileAttributes(name, path, con, ts, qt, ex, hash, ver);
 		
 		this.list.add(f1);
 	}
+        
+        // parse QR code and return content types(eg, plain text or URL or payment code
         public String parseQR(String S){
             boolean isurl = false;
-            String urlRegex = "[(https://|http://|[a-z0-9.#]+[.]|www.)?]*";
-
-            Pattern pat = Pattern.compile(urlRegex.trim());//比对
+            S.toLowerCase();
+            String urlRegex = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]";
+            
+            // regular express to match content of QR code
+            Pattern pat = Pattern.compile(urlRegex.trim());
             Matcher mat = pat.matcher(S.trim());
-            isurl = mat.matches();//判断是否匹配
+            isurl = mat.matches();
             if (isurl) {
                 return "URL";
             }
+            
             // Pay Code
             try{
                 String header = S.substring(0,2);

@@ -9,8 +9,8 @@ import java.io.File;
 import javax.activation.MimetypesFileTypeMap;
 
 /**
- *
- * @author Administrator
+ * check if file that is being read is image file
+ * @author Harley
  */
 public class ImageCheck {
     private  MimetypesFileTypeMap mtftp;

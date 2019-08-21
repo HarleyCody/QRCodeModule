@@ -54,6 +54,10 @@ import org.sleuthkit.datamodel.TskData;
  * DataSourceIngestModuleProgress object, and use of a subset of the available
  * ingest services.
  */
+/**
+ *
+ * @author Harley
+ */
 class SampleDataSourceIngestModule implements DataSourceIngestModule {
 
     private final boolean skipKnownFiles;

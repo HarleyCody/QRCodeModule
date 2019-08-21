@@ -29,18 +29,10 @@
  */
 package org.qrcode.autopsy;
 
-// The following import is required for the ServiceProvider annotation (see 
-// below) used by the Autopsy ingest framework to locate ingest module 
-// factories. You will need to add a dependency on the Lookup API NetBeans 
-// module to your NetBeans module to use this import.
-import org.qrcode.autopsy.SampleDataSourceIngestModule;
+
 import org.openide.util.lookup.ServiceProvider;
 
-// The following import is required to participate in Autopsy 
-// internationalization and localization. Autopsy core is currently localized 
-// for Japan. Please consult the NetBeans documentation for details.
 import org.openide.util.NbBundle;
-import org.qrcode.autopsy.SampleIngestModuleIngestJobSettingsPanel;
 
 import org.sleuthkit.autopsy.ingest.IngestModuleFactory;
 import org.sleuthkit.autopsy.ingest.DataSourceIngestModule;
@@ -326,6 +318,6 @@ public class SampleIngestModuleFactory implements IngestModuleFactory {
         if (!(settings instanceof SampleModuleIngestJobSettings)) {
             throw new IllegalArgumentException("Expected settings argument to be instanceof SampleModuleIngestJobSettings");
         }
-        return  SampleFileIngestModule.getInstance((SampleModuleIngestJobSettings) settings);
+        return new SampleFileIngestModule((SampleModuleIngestJobSettings) settings);
     }
 }
